@@ -5,6 +5,6 @@ Setup python environment and depedencies with this command in terminal
 
 ```poetry install```
 
-Run the downloader with this command in terminal**
+Run the downloader with this command in terminal
 
 ```poetry run python main.py```
