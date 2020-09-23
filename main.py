@@ -163,9 +163,8 @@ def extract_data_from_excel(file_data: BytesIO) -> Dict[str, DataFrame]:
         file_data: Excel file in bytes to extract sheets from.
 
     Returns:
-        A python dictionary with keys the sheet name used in Excel file
-        and as values parsed cleaned up panda's data frames.
-
+        A dictionary with sheet name as key and parsed cleaned up panda's 
+    data frame as value.
     """
     sheets_to_be_extracted = {
             "Main table": extract_main_table_sheet,
@@ -200,6 +199,13 @@ def extract_data_from_excel(file_data: BytesIO) -> Dict[str, DataFrame]:
 def write_exported_data_to_file(
         data_map: Dict[str, DataFrame], out_dir="exported_data"
 ):
+    """
+        Save extracted sheet data as csv files into `out_dir`.
+    
+    Args:
+        data_map: Mapping with sheet name and sheet values.
+        out_dir:  Output folder for csv files.
+    """
     import os
 
     if not os.path.exists(out_dir):
