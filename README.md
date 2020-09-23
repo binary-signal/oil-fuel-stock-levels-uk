@@ -1,6 +1,8 @@
 # oil-fuel-stock-levels-uk
 Parser for uk oil fuel and stock market  statistics
 
-poetry install
+Setup python environment and depedencies with this command in terminal
+```poetry install```
 
-poetry run python main.py
+Run the downloader with this command in terminal
+```poetry run python main.py```
