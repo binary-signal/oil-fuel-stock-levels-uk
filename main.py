@@ -1,3 +1,5 @@
+# -*- coding:utf-8 -*-
+
 import logging
 import sys
 import warnings
@@ -10,14 +12,20 @@ from openpyxl import load_workbook
 from openpyxl.worksheet.worksheet import Worksheet
 from pandas import DataFrame, set_option
 
+# mute openpyxl deprecation warning for `get_sheet_by_name` function
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
+# max out number of displayed columns/rows when printing data frames in stdout
 set_option("display.max_rows", None)
 set_option("display.max_columns", None)
 set_option("display.width", None)
 
 
 def init_logging() -> logging.Logger:
+    """
+    Initialise a logging object.
+    """
+    
     logger = logging.getLogger(__name__)
     logger.setLevel(logging.DEBUG)
     handler = logging.StreamHandler(sys.stdout)
@@ -44,7 +52,7 @@ http = requests.Session()
 
 def get_excel_file(url=URL) -> BytesIO:
     """
-        Download excel file from url location.
+        Download Excel file from url location.
     Args:
         url: Url location of Excel file to be downloaded
 
@@ -52,7 +60,6 @@ def get_excel_file(url=URL) -> BytesIO:
         An Excel file in bytes buffer
 
     """
-
     global http
 
     try:
@@ -60,9 +67,12 @@ def get_excel_file(url=URL) -> BytesIO:
         response = http.get(url)
         response.raise_for_status()
     except requests.RequestException as e:
-        logging.error(str(e) + "\n Error while trying to download excel file")
-        http.close()
+        # close session first to avoid any other run time exceptions from requests
+        http.close() 
+        
+        logging.error(str(e) + "\n Error while trying to download Excel file")
         sys.exit(-1)
+        
     log.info("File ready")
 
     return BytesIO(response.content)
@@ -70,7 +80,7 @@ def get_excel_file(url=URL) -> BytesIO:
 
 def extract_data_sheet(excel_sheet: Worksheet) -> DataFrame:
     """
-        Handling function for extracting `Data` sheet from excel.
+        Handling function for extracting `Data` sheet from Excel.
     Args:
         excel_sheet: An openpyxl worksheet object.
 
@@ -89,7 +99,7 @@ def extract_data_sheet(excel_sheet: Worksheet) -> DataFrame:
 
 def extract_typical_levels_sheet(excel_sheet: Worksheet) -> DataFrame:
     """
-        Handling function for extracting `Typical levels` sheet from excel.
+        Handling function for extracting `Typical levels` sheet from Excel sheet.
     Args:
         excel_sheet: An openpyxl worksheet object.
 
@@ -108,7 +118,7 @@ def extract_typical_levels_sheet(excel_sheet: Worksheet) -> DataFrame:
 
 def extract_stock_data_sheet(excel_sheet: Worksheet) -> DataFrame:
     """
-        Handling function for extracting `Stock level` sheet from excel.
+        Handling function for extracting `Stock level` sheet from Excel.
     Args:
         excel_sheet: An openpyxl worksheet object.
 
@@ -127,7 +137,7 @@ def extract_stock_data_sheet(excel_sheet: Worksheet) -> DataFrame:
 
 def extract_main_table_sheet(excel_sheet: Worksheet) -> DataFrame:
     """
-        Handling function for extracting `Main table` sheet from excel.
+        Handling function for extracting `Main table` sheet from Excel.
     Args:
         excel_sheet: An openpyxl worksheet object.
 
@@ -147,13 +157,13 @@ def extract_main_table_sheet(excel_sheet: Worksheet) -> DataFrame:
 
 def extract_data_from_excel(file_data: BytesIO) -> Dict[str, DataFrame]:
     """
-        Extract user specified sheets from input excel file.
+        Extract user specified sheets from input Ecxel file.
 
     Args:
-        file_data: excel file in bytes to extract sheets from.
+        file_data: Excel file in bytes to extract sheets from.
 
     Returns:
-        A python dictionary with keys the sheet name used in excel file
+        A python dictionary with keys the sheet name used in Excel file
         and as values parsed cleaned up panda's data frames.
 
     """
@@ -164,7 +174,7 @@ def extract_data_from_excel(file_data: BytesIO) -> Dict[str, DataFrame]:
             "Stock data": extract_stock_data_sheet,
     }
 
-    # set `data_only` to evaluate cell functions to values
+    # set `data_only` to evaluate functions in cells to values
     wb = load_workbook(file_data, data_only=True)
 
     extracted_data = {
@@ -197,18 +207,23 @@ def write_exported_data_to_file(
         os.mkdir(out_dir)
 
     log.info("Write data to csv files into `{0}` dir ".format(out_dir))
+    
     for file, df in data_map.items():
         df.to_csv(os.path.join(out_dir, file + ".csv"), index=False)
 
 
 def main():
     """
-    Main entry point for downloader
+    Main entry point for downloader.
     """
     global http
+    
     file = get_excel_file()
+    
     all_data = extract_data_from_excel(file)
+    
     write_exported_data_to_file(all_data)
+    
     http.close()
     log.info("Done!")
 
