@@ -42,13 +42,26 @@ URL = (
 http = requests.Session()
 
 
-def get_excel_file() -> BytesIO:
+def get_excel_file(url=URL) -> BytesIO:
+    """
+        Download excel file from url location.
+    Args:
+        url: Url location of Excel file to be downloaded
+
+    Returns:
+        An Excel file in bytes buffer
+
+    """
+
+    global http
+
     try:
-        log.info(f"Get -> {URL}")
-        response = http.get(URL)
+        log.info(f"Get -> {url}")
+        response = http.get(url)
         response.raise_for_status()
     except requests.RequestException as e:
         logging.error(str(e) + "\n Error while trying to download excel file")
+        http.close()
         sys.exit(-1)
     log.info("File ready")
 
@@ -57,11 +70,17 @@ def get_excel_file() -> BytesIO:
 
 def extract_data_sheet(excel_sheet: Worksheet) -> DataFrame:
     """
-    Handler for extracting `Data` sheet
+        Handling function for extracting `Data` sheet from excel.
+    Args:
+        excel_sheet: An openpyxl worksheet object.
+
+    Returns:
+        A panda's data frame with clean sheet data.
+
     """
     data = excel_sheet.values
 
-    # magic offset from excel file to extract columns
+    # magic offset from Excel file to extract columns
     cols = list(islice(data, 6, 7))[0]
     data = list(data)
 
@@ -70,11 +89,17 @@ def extract_data_sheet(excel_sheet: Worksheet) -> DataFrame:
 
 def extract_typical_levels_sheet(excel_sheet: Worksheet) -> DataFrame:
     """
-    Handler for extracting `Typical level` sheet
+        Handling function for extracting `Typical levels` sheet from excel.
+    Args:
+        excel_sheet: An openpyxl worksheet object.
+
+    Returns:
+        A panda's data frame with clean sheet data.
+
     """
     data = excel_sheet.values
 
-    # magic offset from excel file to extract columns
+    # magic offset from Excel file to extract columns
     cols = list(islice(data, 8, 9))[0]
     data = list(data)
 
@@ -82,10 +107,18 @@ def extract_typical_levels_sheet(excel_sheet: Worksheet) -> DataFrame:
 
 
 def extract_stock_data_sheet(excel_sheet: Worksheet) -> DataFrame:
-    """Handler for extracting `Stock level` sheet"""
+    """
+        Handling function for extracting `Stock level` sheet from excel.
+    Args:
+        excel_sheet: An openpyxl worksheet object.
+
+    Returns:
+        A panda's data frame with clean sheet data.
+
+    """
     data = excel_sheet.values
 
-    # magic offset from excel file to extract columns
+    # magic offset from Excel file to extract columns
     cols = list(islice(data, 6, 7))[0]
     data = list(data)
 
@@ -93,10 +126,18 @@ def extract_stock_data_sheet(excel_sheet: Worksheet) -> DataFrame:
 
 
 def extract_main_table_sheet(excel_sheet: Worksheet) -> DataFrame:
-    """Handler for extracting `Main table` sheet"""
+    """
+        Handling function for extracting `Main table` sheet from excel.
+    Args:
+        excel_sheet: An openpyxl worksheet object.
+
+    Returns:
+        A pandas data frame with clean sheet data.
+
+    """
     data = excel_sheet.values
 
-    # magic offset from excel file to extract columns
+    # magic offset from Excel file to extract columns
     cols = list(islice(data, 7, 8))[0]
     data = list(data)
 
@@ -105,6 +146,17 @@ def extract_main_table_sheet(excel_sheet: Worksheet) -> DataFrame:
 
 
 def extract_data_from_excel(file_data: BytesIO) -> Dict[str, DataFrame]:
+    """
+        Extract user specified sheets from input excel file.
+
+    Args:
+        file_data: excel file in bytes to extract sheets from.
+
+    Returns:
+        A python dictionary with keys the sheet name used in excel file
+        and as values parsed cleaned up panda's data frames.
+
+    """
     sheets_to_be_extracted = {
             "Main table": extract_main_table_sheet,
             "Typical levels": extract_typical_levels_sheet,
@@ -150,9 +202,14 @@ def write_exported_data_to_file(
 
 
 def main():
+    """
+    Main entry point for downloader
+    """
+    global http
     file = get_excel_file()
     all_data = extract_data_from_excel(file)
     write_exported_data_to_file(all_data)
+    http.close()
     log.info("Done!")
 
 
